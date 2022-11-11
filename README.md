@@ -25,3 +25,8 @@ Options:
 ```bash
 $ v -prod -enable-globals -cc gcc vindex.v
 ```
+
+## TODO
+
+- [ ] Use a faster implementation to replace WaitGroup
+- [ ] No GC, complete manual memory management
