@@ -47,7 +47,7 @@ pub fn main() {
         host: config.host
         port: config.port
         family: .ip
-    }) or { panic(err) }
+    }) or { println(err.msg().title()) exit(1) }
 }
 
 [inline]
@@ -85,9 +85,9 @@ fn file_list(path string) []string {
     // Add jobs to wait group
     for i in 0 .. flist.len {
         wait_group.add(1)
-        go fn (path string, fname string, mut files []string, mut wg sync.WaitGroup) {
-            defer { wg.done() }
+        go fn (path string, fname string, mut files []string, mut wg &sync.WaitGroup) {
             files << file_meta(path, fname)
+            defer { wg.done() }
         }(path, flist[i], mut &files, mut wait_group)
     }
 
