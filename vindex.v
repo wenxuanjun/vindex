@@ -57,8 +57,10 @@ fn unix_to_gmt(unix_time i64) string {
     return '${timestamp_local.custom_format(fmt_string)} GMT'
 }
 
-fn file_meta(path string, file string) string {
-    mod_unix := os.file_last_mod_unix(file)
+fn file_meta(path string, fname string) string {
+    full_path := path + "/" + fname
+
+    mod_unix := os.file_last_mod_unix(full_path)
     mod_time := if config.timestamp {
         mod_unix.str()
     } else {
@@ -66,38 +68,44 @@ fn file_meta(path string, file string) string {
     }
 
     // If it's not a directory then size is not needed
-    full_path := path + "/" + file
     return if os.is_dir(full_path) {
-        '{"name":"${file}","type":"directory","mtime":${mod_time}}'
+        '{"name":"${fname}","type":"directory","mtime":${mod_time}}'
     } else {
         file_size := os.file_size(full_path).str()
-        '{"name":"${file}","type":"file","mtime":${mod_time},"size":${file_size}}'
+        '{"name":"${fname}","type":"file","mtime":${mod_time},"size":${file_size}}'
     }
 }
 
-fn file_list(path string) []string {
+fn file_list(path string) shared []string {
     stop_watch := time.new_stopwatch()
 
-    mut files := []string{}
+    shared files := []string{}
     flist := os.ls(path) or {[]}
     mut wait_group := sync.new_waitgroup()
+    // mut sema := sync.new_semaphore()
 
     // Add jobs to wait group
     for i in 0 .. flist.len {
         wait_group.add(1)
-        go fn (path string, fname string, mut files []string, mut wg &sync.WaitGroup) {
-            files << file_meta(path, fname)
+        go fn (path string, fname string, shared files []string, mut wg &sync.WaitGroup) {
+            // println('Processing ${fname}')
+            // sema.post()
+            lock { files << file_meta(path, fname) }
+            // sema.try_wait()
+            // println('Done ${fname}')
             defer { wg.done() }
-        }(path, flist[i], mut &files, mut wait_group)
+        }(path, flist[i], shared files, mut wait_group)
     }
 
     // Wait for all go routines to finish
     wait_group.wait()
+    //sema.try_wait()
 
     if config.verbose {
         println('File list took: ${stop_watch.elapsed().milliseconds()}ms')
     }
 
+    // return files
     return files
 }
 
@@ -140,7 +148,7 @@ pub fn (mut app App) app_main(path string) vweb.Result {
     }
 
     // It's a directory, let's list it
-    flist := file_list(config.dir + path)
+    flist := rlock { file_list(config.dir + path) }
     files := file_array_joint(flist)
 
     return app.text(files)
