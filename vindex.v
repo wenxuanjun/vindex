@@ -99,13 +99,11 @@ fn file_list(path string) shared []string {
 
     // Wait for all go routines to finish
     wait_group.wait()
-    //sema.try_wait()
 
     if config.verbose {
         println('File list took: ${stop_watch.elapsed().milliseconds()}ms')
     }
 
-    // return files
     return files
 }
 
