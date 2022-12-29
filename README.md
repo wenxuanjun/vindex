@@ -6,16 +6,18 @@ Generate json string for a directory which is compatible with nginx's `autoindex
 
 ```bash
 $ ./vindex -h
-Usage: vindex [options] [ARGS]
+Usage: vindex [options] 
 
 Description: Fast and simple file list server written in V
+
+This application does not expect any arguments
 
 Options:
   -l, --host <string>       host for listening, default is 127.0.0.1
   -p, --port <int>          port for listening, default is 3000
   -d, --dir <string>        base dir of the indexer, default is ./
-  -t, --timestamp           use timestamp, default is false
-  -v, --verbose             enable verbose, default is false
+  -v, --verbose             print info of request, default is false
+  -f, --log_full_path       print full path when verbose, default is false
   -h, --help                display this help and exit
   --version                 output version information and exit
 ```
