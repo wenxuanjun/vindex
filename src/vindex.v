@@ -14,7 +14,7 @@ const (
         "host for listening, default is 127.0.0.1"
         "port for listening, default is 3000"
         "print info of request, default is false"
-        "print full path when verbose, default is false"
+        "print full path when verbose, default is true"
     ]
 )
 
@@ -46,7 +46,7 @@ pub fn main() {
         host: fp.string("host", `l`, "127.0.0.1", app_usage[1])
         port: fp.int("port", `p`, 3500, app_usage[2])
         verbose: fp.bool("verbose", `v`, false, app_usage[3])
-        log_full_path: fp.bool("log_full_path", `f`, false, app_usage[4])
+        log_full_path: fp.bool("log_full_path", `f`, true, app_usage[4])
     }
 
     // Exit when bad flag matched
@@ -136,20 +136,21 @@ fn file_array_to_json(files []string) string {
 ['/:path...']
 pub fn (mut app App) app_main(path string) vweb.Result {
     full_path := app.config.dir + path
+    log_path := if app.config.log_full_path { full_path } else { path }
 
     // Return error if it not exists or not a directory
     if !os.exists(full_path) {
-        print_verbose(app.config.verbose, 'Path not found: ${full_path}')
+        print_verbose(app.config.verbose, 'Path not found: ${log_path}')
         return app.not_found()
     }
     if !os.is_dir(full_path) {
         app.set_status(400, '')
-        print_verbose(app.config.verbose, 'Not a directory: ${full_path}')
+        print_verbose(app.config.verbose, 'Not a directory: ${log_path}')
         return app.text('Not a directory')
     }
 
     // It's a valid directory
-    print_verbose(app.config.verbose, 'Request: ${full_path}')
+    print_verbose(app.config.verbose, 'Request: ${log_path}')
 
     // It's a directory, let's list it
     stop_watch := time.new_stopwatch()
