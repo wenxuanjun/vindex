@@ -23,7 +23,7 @@ Options:
 ## Compile
 
 ```bash
-$ v -enable-globals -prod -cc clang -cflags "-Ofast -static -flto" vindex.v
+$ v -prod -autofree -compress -gc boehm_incr_opt -cc clang -cflags "-Ofast -static -flto" .
 ```
 
 ## TODO
