@@ -82,17 +82,12 @@ fn file_list(path string) shared []string {
     shared files := []string{}
     flist := os.ls(path) or {[]}
     mut wait_group := sync.new_waitgroup()
-    // mut sema := sync.new_semaphore()
 
     // Add jobs to wait group
     for i in 0 .. flist.len {
         wait_group.add(1)
         go fn (path string, fname string, shared files []string, mut wg &sync.WaitGroup) {
-            // println('Processing ${fname}')
-            // sema.post()
             lock { files << file_meta(path, fname) }
-            // sema.try_wait()
-            // println('Done ${fname}')
             defer { wg.done() }
         }(path, flist[i], shared files, mut wait_group)
     }
