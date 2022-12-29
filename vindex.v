@@ -61,11 +61,7 @@ fn file_meta(path string, fname string) string {
     full_path := path + "/" + fname
 
     mod_unix := os.file_last_mod_unix(full_path)
-    mod_time := if config.timestamp {
-        mod_unix.str()
-    } else {
-        '"${unix_to_gmt(mod_unix)}"'
-    }
+    mod_time := if config.timestamp { mod_unix.str() } else { '"${unix_to_gmt(mod_unix)}"' }
 
     // If it's not a directory then size is not needed
     return if os.is_dir(full_path) {
@@ -81,19 +77,20 @@ fn file_list(path string) shared []string {
 
     shared files := []string{}
     flist := os.ls(path) or {[]}
-    mut wait_group := sync.new_waitgroup()
+    file_metadata_ch := chan string{cap: flist.len}
 
-    // Add jobs to wait group
+    // Add jobs to channel
     for i in 0 .. flist.len {
-        wait_group.add(1)
-        go fn (path string, fname string, shared files []string, mut wg &sync.WaitGroup) {
-            lock { files << file_meta(path, fname) }
-            defer { wg.done() }
-        }(path, flist[i], shared files, mut wait_group)
+        go fn (path string, fname string, ch chan string) {
+            ch <- file_meta(path, fname)
+        }(path, flist[i], file_metadata_ch)
     }
 
-    // Wait for all go routines to finish
-    wait_group.wait()
+    // Retrieve metadata from channel
+    for _ in 0 .. flist.len {
+        file_metadata := <- file_metadata_ch
+        lock { files << file_metadata }
+    }
 
     if config.verbose {
         println('File list took: ${stop_watch.elapsed().milliseconds()}ms')
@@ -142,6 +139,11 @@ pub fn (mut app App) app_main(path string) vweb.Result {
 
     // It's a directory, let's list it
     flist := rlock { file_list(config.dir + path) }
+
+    if config.verbose {
+        println('File count: ${flist.len}')
+    }
+
     files := file_array_joint(flist)
 
     return app.text(files)

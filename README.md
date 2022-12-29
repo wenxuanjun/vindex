@@ -28,5 +28,5 @@ $ v -enable-globals -prod -cc clang -cflags "-Ofast -static" vindex.v
 
 ## TODO
 
-- [ ] Use a faster implementation to replace WaitGroup
+- [x] Use a faster implementation to replace WaitGroup
 - [ ] No GC, complete manual memory management
