@@ -23,7 +23,7 @@ Options:
 ## Compile
 
 ```bash
-$ v -enable-globals -prod -cc clang -cflags "-Ofast -static" vindex.v
+$ v -enable-globals -prod -cc clang -cflags "-Ofast -static -flto" vindex.v
 ```
 
 ## TODO
