@@ -25,7 +25,7 @@ Options:
 ## Compile
 
 ```bash
-$ v -prod -autofree -compress -gc boehm_incr_opt -cc clang -cflags "-Ofast -static -flto" .
+$ v -prod -compress -cc clang -cflags "-Ofast -static -flto" .
 ```
 
 ## TODO

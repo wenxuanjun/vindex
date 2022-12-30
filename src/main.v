@@ -8,15 +8,13 @@ import sync
 import strings
 import v.vmod
 
-const (
-    app_usage = [
-        "base dir of the indexer, default is ./",
-        "host for listening, default is 127.0.0.1"
-        "port for listening, default is 3000"
-        "print info of request, default is false"
-        "print full path when verbose, default is true"
-    ]
-)
+const app_usage = [
+    "base dir of the indexer, default is ./",
+    "host for listening, default is 127.0.0.1"
+    "port for listening, default is 3000"
+    "print info of request, default is false"
+    "print full path when verbose, default is true"
+]
 
 struct App {
     vweb.Context
@@ -104,8 +102,7 @@ fn get_file_list(path string) shared []string {
 
     // Retrieve metadata from channel
     for _ in 0 .. file_list.len {
-        file_meta := <- file_meta_ch
-        lock { files << file_meta }
+        lock { files << <- file_meta_ch }
     }
 
     return files
