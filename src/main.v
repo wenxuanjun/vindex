@@ -14,6 +14,7 @@ const app_usage = [
     "port for listening, default is 3000"
     "print info of request, default is false"
     "print full path when verbose, default is true"
+    "channel size for file metadata, default is 1000"
 ]
 
 struct App {
@@ -28,6 +29,7 @@ struct Config {
     dir string
     verbose bool
     log_full_path bool
+    chan_size int
 }
 
 pub fn main() {
@@ -45,6 +47,7 @@ pub fn main() {
         port: fp.int("port", `p`, 3500, app_usage[2])
         verbose: fp.bool("verbose", `v`, false, app_usage[3])
         log_full_path: fp.bool("log_full_path", `f`, true, app_usage[4])
+        chan_size: fp.int("chansize", `n`, 1000, app_usage[5])
     }
 
     // Exit when bad flag matched
@@ -88,10 +91,10 @@ fn get_file_meta(path string, fname string) string {
     }
 }
 
-fn get_file_list(path string) shared []string {
+fn get_file_list(path string, chan_size int) shared []string {
     shared files := []string{}
     file_list := os.ls(path) or {[]}
-    file_meta_ch := chan string{cap: file_list.len}
+    file_meta_ch := chan string{cap: chan_size}
 
     // Add jobs to channel
     for i in 0 .. file_list.len {
@@ -151,12 +154,13 @@ pub fn (mut app App) app_main(path string) vweb.Result {
 
     // It's a directory, let's list it
     stop_watch := time.new_stopwatch()
-    file_list := rlock { get_file_list(full_path) }
+    file_list := rlock { get_file_list(full_path, app.config.chan_size) }
     time_elapsed := stop_watch.elapsed().milliseconds()
+
+    // Print the log of file list
     print_verbose(app.config.verbose, 'Get file list took: ${time_elapsed}ms')
     print_verbose(app.config.verbose, 'Number of file: ${file_list.len}')
 
     files_json := file_array_to_json(file_list)
-
     return app.text(files_json)
 }
