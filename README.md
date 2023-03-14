@@ -17,7 +17,7 @@ Options:
   -p, --port <int>          port for listening, default is 3000
   -d, --dir <string>        base dir of the indexer, default is ./
   -v, --verbose             print info of request, default is false
-  -f, --log_full_path       print full path when verbose, default is true
+  -f, --fullpath            print full path when verbose, default is true
   -n, --chansize <int>      channel size for file metadata, default is 1000
   -h, --help                display this help and exit
   --version                 output version information and exit

@@ -46,7 +46,7 @@ pub fn main() {
         host: fp.string("host", `l`, "127.0.0.1", app_usage[1])
         port: fp.int("port", `p`, 3500, app_usage[2])
         verbose: fp.bool("verbose", `v`, false, app_usage[3])
-        log_full_path: fp.bool("log_full_path", `f`, true, app_usage[4])
+        log_full_path: fp.bool("fullpath", `f`, true, app_usage[4])
         chan_size: fp.int("chansize", `n`, 1000, app_usage[5])
     }
 
