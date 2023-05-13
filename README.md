@@ -26,7 +26,7 @@ Options:
 ## Compile
 
 ```bash
-$ v -prod -compress -cc clang -cflags "-Ofast -static -flto" .
+$ v -prod -compress -cc gcc -cflags "-O3 -static -flto" .
 ```
 
 ## TODO
