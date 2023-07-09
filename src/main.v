@@ -29,7 +29,6 @@ struct Config {
     dir string
     verbose bool
     log_full_path bool
-    chan_size int
 }
 
 pub fn main() {
@@ -47,7 +46,6 @@ pub fn main() {
         port: fp.int("port", `p`, 3500, app_usage[2])
         verbose: fp.bool("verbose", `v`, false, app_usage[3])
         log_full_path: fp.bool("fullpath", `f`, true, app_usage[4])
-        chan_size: fp.int("chansize", `n`, 1000, app_usage[5])
     }
 
     // Exit when bad flag matched
@@ -70,9 +68,34 @@ fn print_verbose(verbose bool, msg string) {
 }
 
 fn unix_to_gmt(unix_time i64) string {
-    fmt_string := 'ddd, DD MMM YYYY HH:mm:ss'
+    // For our format, it is always 29 bytes
+    mut mtime_string := strings.new_builder(29)
+
     timestamp_local := time.unix(unix_time - time.offset())
-    return '${timestamp_local.custom_format(fmt_string)} GMT'
+    week_index := timestamp_local.day_of_week()
+    week_string := time.days_string[(week_index - 1) * 3 .. week_index * 3]
+    month_index := timestamp_local.month
+    month_string := time.months_string[(month_index - 1) * 3 .. month_index * 3]
+
+    mtime_string.write_string(week_string)
+    mtime_string.write_string(', ')
+    mtime_string.write_u8(timestamp_local.day / 10 + `0`)
+    mtime_string.write_u8(timestamp_local.day % 10 + `0`)
+    mtime_string.write_u8(` `)
+    mtime_string.write_string(month_string)
+    mtime_string.write_u8(` `)
+    mtime_string.write_string(timestamp_local.year.str())
+    mtime_string.write_u8(` `)
+    mtime_string.write_u8(timestamp_local.hour / 10 + `0`)
+    mtime_string.write_u8(timestamp_local.hour % 10 + `0`)
+    mtime_string.write_u8(`:`)
+    mtime_string.write_u8(timestamp_local.minute / 10 + `0`)
+    mtime_string.write_u8(timestamp_local.minute % 10 + `0`)
+    mtime_string.write_u8(`:`)
+    mtime_string.write_u8(timestamp_local.second / 10 + `0`)
+    mtime_string.write_u8(timestamp_local.second % 10 + `0`)
+    mtime_string.write_string(" GMT")
+    return mtime_string.str()
 }
 
 fn get_file_meta(path string, fname string) string {
@@ -80,7 +103,7 @@ fn get_file_meta(path string, fname string) string {
 
     // Get the last modified time of the file
     last_mod_unix := os.file_last_mod_unix(full_path)
-    last_mod_time := '"${unix_to_gmt(last_mod_unix)}"'
+    last_mod_time := unix_to_gmt(last_mod_unix)
 
     // If it's not a directory then size is not needed
     return if os.is_dir(full_path) {
@@ -91,10 +114,10 @@ fn get_file_meta(path string, fname string) string {
     }
 }
 
-fn get_file_list(path string, chan_size int) shared []string {
+fn get_file_list(path string) shared []string {
     shared files := []string{}
     file_list := os.ls(path) or {[]}
-    file_meta_ch := chan string{cap: chan_size}
+    file_meta_ch := chan string{cap: file_list.len}
 
     // Add jobs to channel
     for i in 0 .. file_list.len {
@@ -154,7 +177,7 @@ pub fn (mut app App) app_main(path string) vweb.Result {
 
     // It's a directory, let's list it
     stop_watch := time.new_stopwatch()
-    file_list := rlock { get_file_list(full_path, app.config.chan_size) }
+    file_list := rlock { get_file_list(full_path) }
     time_elapsed := stop_watch.elapsed().milliseconds()
 
     // Print the log of file list
