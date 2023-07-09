@@ -13,12 +13,10 @@ Description: Fast and simple file list server written in V
 This application does not expect any arguments
 
 Options:
-  -l, --host <string>       host for listening, default is 127.0.0.1
-  -p, --port <int>          port for listening, default is 3000
+  -p, --port <int>          print info of request, default is false
   -d, --dir <string>        base dir of the indexer, default is ./
-  -v, --verbose             print info of request, default is false
-  -f, --fullpath            print full path when verbose, default is true
-  -n, --chansize <int>      channel size for file metadata, default is 1000
+  -v, --verbose             print full path when verbose, default is true
+  -f, --fullpath            channel size for file metadata, default is 1000
   -h, --help                display this help and exit
   --version                 output version information and exit
 ```
@@ -26,7 +24,7 @@ Options:
 ## Compile
 
 ```bash
-$ v -prod -compress -cc gcc -cflags "-O3 -static -flto" .
+$ v -prod -skip-unused -cc gcc -cflags "-O3 -static -flto" .
 ```
 
 ## TODO
