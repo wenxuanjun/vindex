@@ -144,10 +144,10 @@ fn get_file_meta(path string, fname string) string {
 
     // If it's not a directory then size is not needed
     return if os.is_dir(full_path) {
-        '{"name":"${fname}","type":"directory","mtime":${last_mod_time}}'
+        '{"name":"${fname}","type":"directory","mtime":"${last_mod_time}"}'
     } else {
         file_size := os.file_size(full_path)
-        '{"name":"${fname}","type":"file","mtime":${last_mod_time},"size":${file_size}}'
+        '{"name":"${fname}","type":"file","mtime":"${last_mod_time}","size":${file_size}}'
     }
 }
 
