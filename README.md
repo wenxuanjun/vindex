@@ -13,10 +13,11 @@ Description: Fast and simple file list server written in V
 This application does not expect any arguments
 
 Options:
-  -p, --port <int>          print info of request, default is false
+  -l, --host <string>       host for listening, default is 127.0.0.1
+  -p, --port <int>          port for listening, default is 3000
   -d, --dir <string>        base dir of the indexer, default is ./
-  -v, --verbose             print full path when verbose, default is true
-  -f, --fullpath            channel size for file metadata, default is 1000
+  -v, --verbose             print info of request, default is false
+  -f, --fullpath            print full path when verbose, default is true
   -h, --help                display this help and exit
   --version                 output version information and exit
 ```
