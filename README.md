@@ -16,8 +16,7 @@ Options:
   -l, --host <string>       host for listening, default is 127.0.0.1
   -p, --port <int>          port for listening, default is 3000
   -d, --dir <string>        base dir of the indexer, default is ./
-  -v, --verbose             print info of request, default is false
-  -f, --fullpath            print full path when verbose, default is true
+  -v, --verbose             print full path when verbose, default is true
   -h, --help                display this help and exit
   --version                 output version information and exit
 ```

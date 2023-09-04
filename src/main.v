@@ -4,6 +4,7 @@ import os
 import vweb
 import time
 import flag
+import log
 import strings
 import v.vmod
 
@@ -11,7 +12,6 @@ const app_usage = [
     "base dir of the indexer, default is ./",
     "host for listening, default is 127.0.0.1"
     "port for listening, default is 3000"
-    "print info of request, default is false"
     "print full path when verbose, default is true"
 ]
 
@@ -24,8 +24,6 @@ struct Config {
     host string
     port int
     dir string
-    verbose bool
-    log_full_path bool
 }
 
 pub fn main() {
@@ -41,8 +39,10 @@ pub fn main() {
         dir: fp.string("dir", `d`, os.getwd(), app_usage[0])
         host: fp.string("host", `l`, "127.0.0.1", app_usage[1])
         port: fp.int("port", `p`, 3500, app_usage[2])
-        verbose: fp.bool("verbose", `v`, false, app_usage[3])
-        log_full_path: fp.bool("fullpath", `f`, true, app_usage[4])
+    }
+
+    if fp.bool("verbose", `v`, false, app_usage[3]) {
+    	log.set_level(.debug)
     }
 
     // Exit when bad flag matched
@@ -64,44 +64,6 @@ pub fn main() {
         println(err.msg().title())
         exit(1)
     }
-}
-
-[inline]
-fn print_verbose(verbose bool, msg string) {
-    vm := vmod.decode( @VMOD_FILE ) or { panic(err) }
-    if verbose { println("[$vm.name] $msg") }
-}
-
-['/:path...']
-pub fn (mut app App) app_main(path string) vweb.Result {
-    full_path := app.config.dir + path
-    log_path := if app.config.log_full_path { full_path } else { path }
-
-    // Return error if it not exists or not a directory
-    if !os.exists(full_path) {
-        print_verbose(app.config.verbose, 'Path not found: ${log_path}')
-        return app.not_found()
-    }
-    if !os.is_dir(full_path) {
-        app.set_status(400, '')
-        print_verbose(app.config.verbose, 'Not a directory: ${log_path}')
-        return app.text('Not a directory')
-    }
-
-    // It's a valid directory
-    print_verbose(app.config.verbose, 'Request: ${log_path}')
-
-    // It's a directory, let's list it
-    stop_watch := time.new_stopwatch()
-    file_list := get_file_list(full_path)
-    time_elapsed := stop_watch.elapsed().milliseconds()
-
-    // Print the log of file list
-    print_verbose(app.config.verbose, 'Get file list took: ${time_elapsed}ms')
-    print_verbose(app.config.verbose, 'Number of file: ${file_list.len}')
-
-    files_json := file_array_to_json(file_list)
-    return app.text(files_json)
 }
 
 fn file_array_to_json(files []string) string {
@@ -183,4 +145,35 @@ fn unix_to_gmt(unix_time i64) string {
     mtime_string.write_u8(timestamp_local.second % 10 + `0`)
     mtime_string.write_string(" GMT")
     return mtime_string.str()
+}
+
+['/:path...']
+pub fn (mut app App) app_main(path string) vweb.Result {
+    full_path := app.config.dir + path
+
+    // Return error if it not exists or not a directory
+    if !os.exists(full_path) {
+        log.warn('Path not found: ${full_path}')
+        return app.not_found()
+    }
+    if !os.is_dir(full_path) {
+        app.set_status(400, '')
+        log.warn('Not a directory: ${full_path}')
+        return app.text('Not a directory')
+    }
+
+    // It's a valid directory
+    log.info('Request: ${full_path}')
+
+    // It's a directory, let's list it
+    stop_watch := time.new_stopwatch()
+    file_list := get_file_list(full_path)
+    time_elapsed := f64(stop_watch.elapsed().microseconds()) / 1000.0
+
+    // Print the log of file list
+    log.debug('Get file list took: ${time_elapsed}ms')
+    log.debug('Number of file: ${file_list.len}')
+
+    files_json := file_array_to_json(file_list)
+    return app.text(files_json)
 }
